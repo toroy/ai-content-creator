@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: ai-content-creator
+
+# AI 配置
+ai:
+  provider: openai          # openai / claude / kimi / deepseek
+  api-key: ${AI_API_KEY:your_api_key_here}
+  base-url: ${AI_BASE_URL:https://api.openai.com/v1}
+  model: ${AI_MODEL:gpt-4o-mini}
+  temperature: 0.7
+  max-tokens: 2000
+
+# 内容配置
+content:
+  platform: weitoutiao    # weitoutiao / maimai / zhihu
+  target-audience: "30-50岁男性，互联网从业者"
+  daily-topic-count: 5
+  article-length:
+    weitoutiao:
+      min: 300
+      max: 800
+    maimai:
+      min: 800
+      max: 2000
+
+# 热点源配置
+hotspot:
+  sources:
+    zhihu:
+      url: "https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total"
+      enabled: true
+    weibo:
+      url: "https://weibo.com/ajax/side/hotSearch"
+      enabled: true
+
+# 敏感词
+sensitive-words:
+  - 政治敏感词
+  - 色情
+  - 暴力
+  - 赌博
+  - 绝对化用语
+  - 第一
+  - 最好
+
+# 定时任务
+scheduler:
+  daily-cron: "0 30 8 * * *"   # 每天 8:30 执行
