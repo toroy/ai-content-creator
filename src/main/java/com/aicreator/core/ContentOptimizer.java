@@ -4,23 +4,16 @@ import com.aicreator.model.OptimizeResult;
 import com.aicreator.util.AiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class ContentOptimizer {
 
     private final AiClient ai;
     private final List<String> sensitiveWords;
-
-    public ContentOptimizer(AiClient ai, List<String> sensitiveWords) {
-        this.ai = ai;
-        this.sensitiveWords = sensitiveWords;
-    }
 
     public OptimizeResult optimize(String content, String persona) {
         OptimizeResult result = new OptimizeResult();
@@ -81,7 +74,7 @@ public class ContentOptimizer {
             case "comment" -> "\n\n你怎么看？欢迎在评论区聊聊。";
             case "follow" -> "\n\n觉得有用就点个关注，持续分享干货。";
             case "share" -> "\n\n如果对你有帮助，欢迎转发给需要的朋友。";
-            case "private" -> "\n\n整理了资料，需要的朋友私信"资料"领取。";
+            case "private" -> "\n\n整理了资料，需要的朋友私信\"资料\"领取。";
             default -> "";
         };
         return content + cta;

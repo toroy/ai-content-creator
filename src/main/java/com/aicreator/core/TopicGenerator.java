@@ -25,7 +25,7 @@ public class TopicGenerator {
     public List<Topic> generate(List<HotspotItem> hotList, int count) {
         int targetCount = count > 0 ? count : contentProps.getDailyTopicCount();
         List<String> hotSummary = hotList.stream().limit(15)
-                .map(h -> "{"title":"" + h.getTitle() + "","source":"" + h.getSource() + ""}")
+                .map(h -> "{\"title\":\"" + h.getTitle() + "\",\"source\":\"" + h.getSource() + "\"}")
                 .toList();
 
         String prompt = String.format("""
