@@ -47,3 +47,11 @@ sensitive-words:
 # 定时任务
 scheduler:
   daily-cron: "0 30 8 * * *"   # 每天 8:30 执行
+  enabled: true                  # 定时任务开关，CLI模式可设为 false
+
+# 应用配置
+app:
+  data-dir: ${user.home}/.ai-content-creator
+  publishing:
+    output-dir: ${app.data-dir}/output
+    webhook-url:                 # RPA webhook 通知地址，可选

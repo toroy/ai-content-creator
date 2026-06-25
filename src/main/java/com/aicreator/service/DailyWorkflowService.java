@@ -11,6 +11,9 @@ import com.aicreator.util.AiClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +33,33 @@ public class DailyWorkflowService {
     private final Analytics analytics;
     private final ContentProperties contentProps;
     private final AiProperties aiProps;
+
+    @Value("${scheduler.enabled:true}")
+    private boolean schedulerEnabled;
+
+    @Scheduled(cron = "${scheduler.daily-cron}")
+    public void scheduledDaily() {
+        if (!schedulerEnabled) {
+            log.debug("定时任务已禁用，跳过");
+            return;
+        }
+        log.info("定时任务触发每日工作流");
+        runDaily();
+    }
+
+    @Async
+    public void runDailyAsync() {
+        runDaily();
+    }
+
+    @Async
+    public void runSingleAsync(String topic) {
+        runSingle(topic);
+    }
+
+    public Map<String, Object> getReport() {
+        return analytics.dailyReport(7);
+    }
 
     public void runDaily() {
         log.info("=".repeat(50));

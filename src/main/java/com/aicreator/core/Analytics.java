@@ -17,13 +17,13 @@ public class Analytics {
     private final ObjectMapper mapper = new ObjectMapper();
     private final File historyFile;
 
-    public Analytics() {
-        String dir = System.getProperty("user.dir") + "/src/main/resources/history";
-        new File(dir).mkdirs();
+    public Analytics(@org.springframework.beans.factory.annotation.Value("${app.data-dir}") String dataDir) {
+        File dir = new File(dataDir);
+        dir.mkdirs();
         this.historyFile = new File(dir, "publish_history.json");
     }
 
-    public void record(Map<String, Object> data) {
+    public synchronized void record(Map<String, Object> data) {
         List<Map<String, Object>> history = load();
         data.put("recordTime", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
         history.add(data);
@@ -34,7 +34,7 @@ public class Analytics {
         }
     }
 
-    private List<Map<String, Object>> load() {
+    private synchronized List<Map<String, Object>> load() {
         if (!historyFile.exists()) return new ArrayList<>();
         try {
             return mapper.readValue(historyFile, List.class);
