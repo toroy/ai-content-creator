@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api")
@@ -33,7 +34,7 @@ public class ManagementController {
     public ResponseEntity<Map<String, String>> triggerSingle(
             @RequestParam(defaultValue = "default") String domain,
             @RequestParam(defaultValue = "") String topic) {
-        orchestrator.runSingle(domain, topic);
+        CompletableFuture.runAsync(() -> orchestrator.runSingle(domain, topic));
         return ResponseEntity.ok(Map.of("status", "accepted", "message", "单篇文章已触发"));
     }
 
