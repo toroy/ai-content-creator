@@ -34,6 +34,25 @@ public class Analytics {
         }
     }
 
+    public synchronized void record(String domain, String platform, String topic, int wordCount,
+                                     Map<String, Object> metrics) {
+        List<Map<String, Object>> history = load();
+        Map<String, Object> data = new HashMap<>();
+        data.put("domain", domain);
+        data.put("platform", platform);
+        data.put("topic", topic);
+        data.put("wordCount", wordCount);
+        data.put("metrics", metrics != null ? metrics : Map.of());
+        data.put("recordTime", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+        data.put("articleId", UUID.randomUUID().toString().substring(0, 8));
+        history.add(data);
+        try {
+            mapper.writerWithDefaultPrettyPrinter().writeValue(historyFile, history);
+        } catch (IOException e) {
+            log.error("保存历史记录失败: {}", e.getMessage());
+        }
+    }
+
     private synchronized List<Map<String, Object>> load() {
         if (!historyFile.exists()) return new ArrayList<>();
         try {
