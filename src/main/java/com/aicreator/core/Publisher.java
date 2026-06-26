@@ -36,25 +36,29 @@ public class Publisher {
     }
 
     public Map<String, Object> publish(Article article, String platform) {
+        return publish(article, platform, "default");
+    }
+
+    public Map<String, Object> publish(Article article, String platform, String domainName) {
         PlatformPublisher pub = publishers.get(platform);
         if (pub == null) {
             return Map.of("status", "error", "msg", "不支持的平台: " + platform);
         }
-        return pub.publish(article);
+        return pub.publish(article, domainName);
     }
 
     private interface PlatformPublisher {
-        Map<String, Object> publish(Article article);
+        Map<String, Object> publish(Article article, String domainName);
     }
 
     private abstract class BasePublisher implements PlatformPublisher {
         @Override
-        public Map<String, Object> publish(Article article) {
+        public Map<String, Object> publish(Article article, String domainName) {
             String title = article.getTitles().isEmpty() ? "无标题" : article.getTitles().get(0);
-            log.info("[{}] 生成RPA发布文件: {}", getPlatform(), title);
+            log.info("[{}:{}] 生成RPA发布文件: {}", getPlatform(), domainName, title);
 
-            String fileName = writeArticleFile(article);
-            log.info("[{}] 文件已写入: {}", getPlatform(), fileName);
+            String fileName = writeArticleFile(article, domainName);
+            log.info("[{}:{}] 文件已写入: {}", getPlatform(), domainName, fileName);
 
             notifyWebhook(fileName, getPlatform());
 
@@ -63,12 +67,13 @@ public class Publisher {
 
         protected abstract String getPlatform();
 
-        private String writeArticleFile(Article article) {
+        private String writeArticleFile(Article article, String domainName) {
             String platform = getPlatform();
             String title = article.getTitles().isEmpty() ? "无标题" : article.getTitles().get(0);
             String keywords = article.getKeywords() != null ? String.join(", ", article.getKeywords()) : "";
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-            String fileName = String.format("%s_%s_%s.md", platform, timestamp, UUID.randomUUID().toString().substring(0, 8));
+            String fileName = String.format("%s_%s_%s_%s.md", domainName, platform, timestamp,
+                    UUID.randomUUID().toString().substring(0, 8));
 
             File dir = new File(outputDir, platform);
             dir.mkdirs();
@@ -77,6 +82,7 @@ public class Publisher {
             sb.append("---\n");
             sb.append("title: \"").append(title).append("\"\n");
             sb.append("platform: ").append(platform).append("\n");
+            sb.append("domain: ").append(domainName).append("\n");
             sb.append("keywords: ").append(keywords).append("\n");
             sb.append("created: ").append(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)).append("\n");
             sb.append("---\n\n");
@@ -86,7 +92,7 @@ public class Publisher {
             try {
                 Files.writeString(file.toPath(), sb.toString());
             } catch (IOException e) {
-                log.error("[{}] 写入发布文件失败: {}", platform, e.getMessage());
+                log.error("[{}:{}] 写入发布文件失败: {}", platform, domainName, e.getMessage());
             }
             return file.getAbsolutePath();
         }
