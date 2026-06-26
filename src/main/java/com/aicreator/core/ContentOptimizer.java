@@ -51,6 +51,44 @@ public class ContentOptimizer {
         return result;
     }
 
+    public OptimizeResult optimize(String content, String persona, List<String> domainSensitiveWords) {
+        OptimizeResult result = new OptimizeResult();
+        result.setOriginal(content);
+        result.setSuggestions(new ArrayList<>());
+
+        // 1. 人格化改写
+        String humanized = ai.humanize(content, persona);
+        result.setHumanized(humanized);
+
+        // 2. 敏感词检测（领域优先，回退全局）
+        OptimizeResult.SensitiveCheck check = new OptimizeResult.SensitiveCheck();
+        List<String> hits = new ArrayList<>();
+        List<String> words = (domainSensitiveWords != null && !domainSensitiveWords.isEmpty())
+                ? domainSensitiveWords : sensitiveWords;
+        for (String word : words) {
+            if (humanized.contains(word)) {
+                hits.add(word);
+            }
+        }
+        check.setPassed(hits.isEmpty());
+        check.setHits(hits);
+        result.setSensitiveCheck(check);
+        if (!hits.isEmpty()) {
+            result.getSuggestions().add("检测到敏感词: " + hits + "，建议修改");
+        }
+
+        // 3. 原创度评估
+        double similarity = calculateSimilarity(content, humanized);
+        result.setOriginalityScore(1.0 - similarity);
+        if (similarity > 0.9) {
+            result.getSuggestions().add("改写程度不够，建议增加更多个人表达");
+        }
+
+        // 4. 格式化
+        result.setFinalContent(format(humanized));
+        return result;
+    }
+
     private String format(String text) {
         return text.replaceAll("\s{3,}", "\n\n").trim();
     }
