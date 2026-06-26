@@ -1,6 +1,6 @@
 package com.aicreator.controller;
 
-import com.aicreator.service.DailyWorkflowService;
+import com.aicreator.service.DailyOrchestrator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +12,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ManagementController {
 
-    private final DailyWorkflowService workflowService;
+    private final DailyOrchestrator orchestrator;
 
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
@@ -25,18 +25,20 @@ public class ManagementController {
 
     @PostMapping("/workflow/daily")
     public ResponseEntity<Map<String, String>> triggerDaily() {
-        workflowService.runDailyAsync();
-        return ResponseEntity.ok(Map.of("status", "accepted", "message", "每日工作流已触发"));
+        orchestrator.runAllAsync();
+        return ResponseEntity.ok(Map.of("status", "accepted", "message", "多领域每日工作流已触发"));
     }
 
     @PostMapping("/workflow/single")
-    public ResponseEntity<Map<String, String>> triggerSingle(@RequestParam(defaultValue = "") String topic) {
-        workflowService.runSingleAsync(topic);
+    public ResponseEntity<Map<String, String>> triggerSingle(
+            @RequestParam(defaultValue = "default") String domain,
+            @RequestParam(defaultValue = "") String topic) {
+        orchestrator.runSingle(domain, topic);
         return ResponseEntity.ok(Map.of("status", "accepted", "message", "单篇文章已触发"));
     }
 
     @GetMapping("/workflow/report")
-    public ResponseEntity<Map<String, Object>> report() {
-        return ResponseEntity.ok(workflowService.getReport());
+    public ResponseEntity<Map<String, String>> report() {
+        return ResponseEntity.ok(Map.of("status", "ok", "message", "报告请查看控制台输出"));
     }
 }
