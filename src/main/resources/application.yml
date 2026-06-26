@@ -55,3 +55,78 @@ app:
   publishing:
     output-dir: ${app.data-dir}/output
     webhook-url:                 # RPA webhook 通知地址，可选
+
+# 多领域配置
+domain:
+  domains:
+    foreign-news:
+      enabled: true
+      label: "外网热点"
+      collector: ai_web_scrape
+      persona: "国际新闻观察者，视角客观冷静"
+      platforms:
+        - weitoutiao
+        - maimai
+      article-count: 3
+      length:
+        min: 100
+        max: 200
+      cta-type: comment
+      sources:
+        - url: "https://www.bbc.com"
+          type: webpage
+        - url: "https://www.zaobao.com"
+          type: webpage
+        - url: "https://www.foxnews.com"
+          type: webpage
+        - url: "https://edition.cnn.com"
+          type: webpage
+        - url: "https://www.aljazeera.com"
+          type: webpage
+    it-hot:
+      enabled: true
+      label: "IT热点"
+      collector: rss_feed
+      persona: "资深程序员，经验丰富，语言犀利"
+      platforms:
+        - maimai
+      article-count: 3
+      length:
+        min: 100
+        max: 200
+      cta-type: follow
+      sources:
+        - url: "https://github.com/trending"
+          type: rss
+        - url: "https://news.ycombinator.com/rss"
+          type: rss
+        - url: "https://www.v2ex.com/feed/tab/tech.xml"
+          type: rss
+        - url: "https://www.36kr.com/feed"
+          type: rss
+        - url: "https://sspai.com/feed"
+          type: rss
+    lifestyle:
+      enabled: true
+      label: "生活热点"
+      collector: hot_filter
+      persona: "懂生活的过来人，温暖接地气"
+      platforms:
+        - weitoutiao
+        - maimai
+      article-count: 3
+      length:
+        min: 100
+        max: 200
+      cta-type: share
+      keywords:
+        - 家庭
+        - 育儿
+        - 美食
+        - 旅游
+        - 健康
+        - 情感
+      excludeKeywords:
+        - 政治
+        - 军事
+        - 灾难
