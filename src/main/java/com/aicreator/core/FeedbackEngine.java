@@ -8,11 +8,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -46,20 +44,32 @@ public class FeedbackEngine {
         // 读取上次分析时间
         Map<String, Object> tips = loadTips();
         String lastAnalysis = (String) tips.getOrDefault("lastAnalysis", "");
-        LocalDateTime lastTime = lastAnalysis.isEmpty() ? null
-                : LocalDateTime.parse(lastAnalysis);
+        LocalDateTime lastTime = null;
+        if (!lastAnalysis.isEmpty()) {
+            try {
+                lastTime = LocalDateTime.parse(lastAnalysis);
+            } catch (Exception e) {
+                log.warn("解析上次分析时间失败: {}，将分析全部历史", lastAnalysis);
+            }
+        }
+        final LocalDateTime finalLastTime = lastTime;
 
         // 统计上次分析后的新文章数
         long newCount = history.stream()
                 .filter(h -> {
                     String t = (String) h.getOrDefault("recordTime", "");
-                    if (lastTime == null) return true;
-                    return LocalDateTime.parse(t).isAfter(lastTime);
+                    if (finalLastTime == null) return true;
+                    try {
+                        return LocalDateTime.parse(t).isAfter(finalLastTime);
+                    } catch (Exception e) {
+                        log.warn("解析文章记录时间失败，排除该记录: {}", t);
+                        return false;
+                    }
                 })
                 .count();
 
         boolean shouldAnalyze = newCount >= 30 ||
-                (lastTime != null && lastTime.isBefore(LocalDateTime.now().minusDays(7)));
+                (finalLastTime != null && finalLastTime.isBefore(LocalDateTime.now().minusDays(7)));
 
         if (shouldAnalyze) {
             log.info("触发反馈分析 (上次分析后新增 {} 篇文章)", newCount);
