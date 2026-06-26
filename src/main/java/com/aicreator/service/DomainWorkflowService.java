@@ -8,7 +8,6 @@ import com.aicreator.model.OptimizeResult;
 import com.aicreator.model.Topic;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,7 +26,6 @@ public class DomainWorkflowService {
     private final Publisher publisher;
     private final Analytics analytics;
 
-    @Async
     public void execute(DomainProperties.DomainDefinition domain) {
         String label = domain.getLabel() != null ? domain.getLabel() : domain.toString();
         log.info("=".repeat(40));
