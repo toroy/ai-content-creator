@@ -17,7 +17,7 @@ public class DomainRegistry {
 
     public List<DomainProperties.DomainDefinition> getEnabled() {
         if (domainProps.getDomains() == null || domainProps.getDomains().isEmpty()) {
-            log.warn("未配置任何领域");
+            log.warn("⚠️ 未配置任何领域");
             return List.of();
         }
         return domainProps.getDomains().values().stream()
