@@ -56,9 +56,11 @@ public class RssCollector implements ContentCollector {
                 .build();
         HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
-        Document doc = DocumentBuilderFactory.newInstance()
-                .newDocumentBuilder()
-                .parse(response.body());
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        Document doc = dbf.newDocumentBuilder().parse(response.body());
 
         List<HotspotItem> items = new ArrayList<>();
 
@@ -101,13 +103,24 @@ public class RssCollector implements ContentCollector {
 
     private String getLinkHref(Element parent) {
         NodeList links = parent.getElementsByTagName("link");
+        // First pass: look for rel="alternate"
+        for (int i = 0; i < links.getLength(); i++) {
+            Element link = (Element) links.item(i);
+            String rel = link.getAttribute("rel");
+            String href = link.getAttribute("href");
+            if ("alternate".equals(rel) && href != null && !href.isBlank()) {
+                return href;
+            }
+        }
+        // Fallback: any link with href or text content
         for (int i = 0; i < links.getLength(); i++) {
             Element link = (Element) links.item(i);
             String href = link.getAttribute("href");
             if (href != null && !href.isBlank()) return href;
             String rel = link.getAttribute("rel");
             if (rel == null || rel.isBlank() || "alternate".equals(rel)) {
-                return link.getTextContent().trim();
+                String text = link.getTextContent().trim();
+                if (!text.isBlank()) return text;
             }
         }
         return "";
