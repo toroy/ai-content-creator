@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties({AiProperties.class, ContentProperties.class, HotspotProperties.class, SensitiveWordsProperties.class})
+@EnableConfigurationProperties({AiProperties.class, ContentProperties.class, HotspotProperties.class, SensitiveWordsProperties.class, DomainProperties.class})
 public class AppConfig {
 
     @Bean
