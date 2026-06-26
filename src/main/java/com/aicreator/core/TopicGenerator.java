@@ -1,6 +1,7 @@
 package com.aicreator.core;
 
 import com.aicreator.config.ContentProperties;
+import com.aicreator.config.DomainProperties;
 import com.aicreator.model.HotspotItem;
 import com.aicreator.model.Topic;
 import com.aicreator.util.AiClient;
@@ -21,6 +22,7 @@ public class TopicGenerator {
     private final AiClient ai;
     private final ContentProperties contentProps;
     private final ObjectMapper mapper;
+    private final FeedbackEngine feedbackEngine;
 
     public List<Topic> generate(List<HotspotItem> hotList, int count) {
         int targetCount = count > 0 ? count : contentProps.getDailyTopicCount();
@@ -40,6 +42,60 @@ public class TopicGenerator {
             请直接输出 JSON 格式：
             [{"rank":1,"topic":"选题标题","angle":"切入角度","emotion":"情绪点","interaction":"评论区引导话术"}]
             """, contentProps.getTargetAudience(), targetCount, hotSummary);
+
+        String result = ai.chat(prompt, 0.8, 2000);
+        try {
+            return mapper.readValue(result, new TypeReference<List<Topic>>() {});
+        } catch (Exception e) {
+            log.error("选题 JSON 解析失败，降级处理: {}", e.getMessage());
+            List<Topic> fallback = new ArrayList<>();
+            for (int i = 0; i < Math.min(targetCount, hotList.size()); i++) {
+                Topic t = new Topic();
+                t.setRank(i + 1);
+                t.setTopic(hotList.get(i).getTitle());
+                t.setAngle("热点解读");
+                t.setEmotion("共鸣");
+                t.setInteraction("你怎么看？");
+                fallback.add(t);
+            }
+            return fallback;
+        }
+    }
+
+    public List<Topic> generate(List<HotspotItem> hotList, DomainProperties.DomainDefinition domain) {
+        int targetCount = domain.getArticleCount() > 0 ? domain.getArticleCount() : 3;
+        String persona = domain.getPersona() != null ? domain.getPersona() : "资深自媒体人";
+
+        List<String> hotSummary = hotList.stream().limit(15)
+                .map(h -> "{\"title\":\"" + h.getTitle() + "\",\"source\":\"" + h.getSource() + "\"}")
+                .toList();
+
+        String keywordHint = "";
+        if (domain.getKeywords() != null && !domain.getKeywords().isEmpty()) {
+            keywordHint = "优先选择与以下关键词相关的话题：" + String.join("、", domain.getKeywords()) + "\n";
+        }
+
+        // 注入反馈优化建议
+        String feedbackHint = "";
+        String domainTips = feedbackEngine.getDomainTips(domain.getLabel());
+        if (domainTips != null && !domainTips.isBlank()) {
+            feedbackHint = "\n近期表现洞察（供参考）：" + domainTips + "\n";
+        }
+
+        String prompt = String.format("""
+            你是一位"%s"。请根据以下热点，筛选出 %d 个最适合%s（%s）的选题，按"爆款概率"排序。
+            %s%s要求：
+            1. 有争议性、情绪共鸣或反常识
+            2. 适合 %d-%d 字的短内容
+            3. 能引发评论互动
+            4. 选题必须贴合"%s"的领域方向
+            热点列表：%s
+            请直接输出 JSON 格式：
+            [{"rank":1,"topic":"选题标题","angle":"切入角度","emotion":"情绪点","interaction":"评论区引导话术"}]
+            """, persona, targetCount, domain.getLabel(), persona, keywordHint, feedbackHint,
+            domain.getLength() != null ? domain.getLength().getMin() : 100,
+            domain.getLength() != null ? domain.getLength().getMax() : 200,
+            domain.getLabel(), hotSummary);
 
         String result = ai.chat(prompt, 0.8, 2000);
         try {
