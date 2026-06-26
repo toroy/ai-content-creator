@@ -80,12 +80,14 @@ public class ArticleWriter {
 
     public Article write(String topic, DomainProperties.DomainDefinition domain) {
         String platform = domain.getPlatforms().isEmpty() ? "weitoutiao" : domain.getPlatforms().get(0);
-        ContentProperties.LengthRange length = domain.getLength() != null
-                ? new ContentProperties.LengthRange() {{
-                    setMin(domain.getLength().getMin());
-                    setMax(domain.getLength().getMax());
-                }}
-                : contentProps.getArticleLength().getOrDefault(platform, new ContentProperties.LengthRange());
+        ContentProperties.LengthRange length;
+        if (domain.getLength() != null) {
+            length = new ContentProperties.LengthRange();
+            length.setMin(domain.getLength().getMin());
+            length.setMax(domain.getLength().getMax());
+        } else {
+            length = contentProps.getArticleLength().getOrDefault(platform, new ContentProperties.LengthRange());
+        }
 
         if (length.getMin() <= 0) length.setMin(100);
         if (length.getMax() <= 0) length.setMax(200);
