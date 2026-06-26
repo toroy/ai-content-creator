@@ -2,6 +2,7 @@ package com.aicreator.service;
 
 import com.aicreator.config.DomainProperties;
 import com.aicreator.core.DomainRegistry;
+import com.aicreator.core.Analytics;
 import com.aicreator.core.FeedbackEngine;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -21,6 +23,7 @@ public class DailyOrchestrator {
     private final DomainRegistry domainRegistry;
     private final DomainWorkflowService domainWorkflow;
     private final FeedbackEngine feedbackEngine;
+    private final Analytics analytics;
 
     @Value("${scheduler.enabled:true}")
     private boolean schedulerEnabled;
@@ -98,8 +101,10 @@ public class DailyOrchestrator {
         domainWorkflow.execute(domain);
     }
 
-    public void runReport() {
-        // 委托给 Analytics（通过 FeedbackEngine 暴露）
+    public Map<String, Object> runReport() {
+        // Print to console
         feedbackEngine.printReport();
+        // Return structured data via Analytics
+        return analytics.dailyReport(7);
     }
 }

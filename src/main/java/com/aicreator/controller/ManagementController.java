@@ -38,7 +38,7 @@ public class ManagementController {
     }
 
     @GetMapping("/workflow/report")
-    public ResponseEntity<Map<String, String>> report() {
-        return ResponseEntity.ok(Map.of("status", "ok", "message", "报告请查看控制台输出"));
+    public ResponseEntity<Map<String, Object>> report() {
+        return ResponseEntity.ok(orchestrator.runReport());
     }
 }
